@@ -1,0 +1,11 @@
+[package]
+name = "wasm"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+braille-ascii-art = { git = "https://github.com/Princic-1837592/braille-ascii-art", rev = "a87b4b41d959d1b0636d7ed0cfac00d35572db2e" }
+wasm-bindgen = "0.2.80"
