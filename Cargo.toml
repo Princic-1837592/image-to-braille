@@ -1,0 +1,12 @@
+[package]
+name = "braille-ascii-art"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "braille-ascii-art"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5.16", features = ["derive"] }
+image = "0.25.2"
