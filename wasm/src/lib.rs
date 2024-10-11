@@ -1,17 +1,17 @@
-use braille_ascii_art::{from_bytes, GrayMethod};
+use braille_ascii_art::{from_bytes, ConversionError, GrayMethod};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen(js_name = apply)]
 pub fn apply(
-    bytes: String,
+    bytes: &[u8],
     width: usize,
     invert: bool,
     has_alpha: bool,
     gray_method: usize,
     monospace: bool,
-) -> String {
-    match from_bytes(
-        &[],
+) -> Result<String, String> {
+    from_bytes(
+        bytes,
         width,
         invert,
         has_alpha,
@@ -19,12 +19,16 @@ pub fn apply(
             0 => GrayMethod::Average,
             1 => GrayMethod::Lightness,
             2 => GrayMethod::Luminosity,
-            _ => GrayMethod::Average,
+            3 => GrayMethod::Max,
+            _ => GrayMethod::Min,
         },
         monospace,
-    ) {
-        Ok(_) => "ok",
-        Err(_) => "",
-    }
-    .to_string()
+    )
+    .map_err(|error| {
+        match error {
+            ConversionError::WidthNotEven => "WidthNotEven",
+            ConversionError::HeightNotMultipleOfFour => "HeightNotMultipleOfFour",
+        }
+        .to_string()
+    })
 }
