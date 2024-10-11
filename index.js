@@ -16,7 +16,7 @@ window.onload = async function () {
 
 	const bytes = new Uint8Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
 	try {
-		apply(bytes, canvas.width - 1, false, true, 1, false)
+		console.log(apply(bytes, canvas.width, false, true, 1, false));
 	} catch (e) {
 		console.log(typeof e);
 	}
