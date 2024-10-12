@@ -3,6 +3,7 @@ import init, {
 } from "./wasm/pkg/wasm.js";
 
 let INVERT, MONOSPACE, GRAY, CHARS, PIXELS, COPY;
+let THRESHOLD, THRESHOLD_VALUE;
 let CHAR_COUNT;
 let BRAILLE;
 let LAST_IMAGE, LAST_CANVAS;
@@ -14,6 +15,8 @@ window.onload = async function () {
 	INVERT = document.getElementById("invert");
 	MONOSPACE = document.getElementById("monospace");
 	GRAY = document.getElementById("gray");
+	THRESHOLD = document.getElementById("threshold");
+	THRESHOLD_VALUE = document.getElementById("threshold-value");
 	CHARS = document.getElementById("width-chars");
 	PIXELS = document.getElementById("width-pixels");
 	COPY = document.getElementById("copy");
@@ -28,6 +31,10 @@ window.onload = async function () {
 			await createCanvas(LAST_IMAGE);
 		});
 	}
+	THRESHOLD.oninput = async () => {
+		THRESHOLD_VALUE.innerText = THRESHOLD.value;
+		await createCanvas(LAST_IMAGE);
+	};
 	COPY.onclick = async () => {
 		await navigator.clipboard.writeText(BRAILLE.innerText.trim());
 	};
@@ -60,6 +67,7 @@ function convert() {
 			true,
 			GRAY.value,
 			MONOSPACE.checked,
+			THRESHOLD.value,
 		).trim();
 		document.getElementById("braille-art").innerText = result;
 		CHAR_COUNT.innerText = result.length;

@@ -68,6 +68,14 @@ body * {
 	}
 }
 
+#threshold-container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	width: max-content;
+}
+
 #braille-art {
 	flex-grow: 1;
 	overflow: auto;

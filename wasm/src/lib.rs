@@ -3,32 +3,34 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
 pub fn parse(
-    bytes: &[u8],
-    width: usize,
-    invert: bool,
-    has_alpha: bool,
-    gray_method: usize,
-    monospace: bool,
+	bytes: &[u8],
+	width: usize,
+	invert: bool,
+	has_alpha: bool,
+	gray_method: usize,
+	monospace: bool,
+	threshold: u8,
 ) -> Result<String, String> {
-    from_bytes(
-        bytes,
-        width,
-        invert,
-        has_alpha,
-        match gray_method {
-            0 => GrayMethod::Average,
-            1 => GrayMethod::Lightness,
-            2 => GrayMethod::Luminosity,
-            3 => GrayMethod::Max,
-            _ => GrayMethod::Min,
-        },
-        monospace,
-    )
-    .map_err(|error| {
-        match error {
-            ConversionError::WidthNotEven => "WidthNotEven",
-            ConversionError::HeightNotMultipleOfFour => "HeightNotMultipleOfFour",
-        }
-        .to_string()
-    })
+	from_bytes(
+		bytes,
+		width,
+		invert,
+		has_alpha,
+		match gray_method {
+			0 => GrayMethod::Average,
+			1 => GrayMethod::Lightness,
+			2 => GrayMethod::Luminosity,
+			3 => GrayMethod::Max,
+			_ => GrayMethod::Min,
+		},
+		monospace,
+		threshold,
+	)
+	.map_err(|error| {
+		match error {
+			ConversionError::WidthNotEven => "WidthNotEven",
+			ConversionError::HeightNotMultipleOfFour => "HeightNotMultipleOfFour",
+		}
+		.to_string()
+	})
 }
