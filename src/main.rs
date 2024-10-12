@@ -21,6 +21,9 @@ struct Cli {
 	#[clap(short, long, action)]
 	/// If not set, empty spaces will be filled with a single dot to ensure correct spacing
 	monospace: bool,
+	#[clap(short, long, default_value = "128")]
+	/// Threshold to determine if a pixel is black or white. Must be between 0 and 255
+	threshold: u8,
 }
 
 #[derive(Debug, Copy, Clone, ValueEnum)]
@@ -52,6 +55,7 @@ fn main() {
 		cli.width,
 		cli.gray.unwrap_or(CliGrayMethod::Luminosity).into(),
 		cli.monospace,
+		cli.threshold,
 	)
 	.unwrap();
 	let mut file = File::create(cli.dest).unwrap();

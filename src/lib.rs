@@ -43,6 +43,7 @@ fn apply(
 	depth: usize,
 	gray_method: GrayMethod,
 	monospace: bool,
+	threshold: u8,
 ) -> String {
 	let height = bytes.len() / width / depth;
 	let mut result = String::with_capacity((bytes.len() / depth / 8) * 3 + height);
@@ -67,7 +68,7 @@ fn apply(
 				if depth == 4 {
 					pixel_buffer[3] = 0xff;
 				}
-				if pixel_buffer[3] >= 128 && to_gray(pixel_buffer, gray_method) >= 128 {
+				if pixel_buffer[3] >= threshold && to_gray(pixel_buffer, gray_method) >= threshold {
 					buffer ^= 1 << o;
 				}
 			}
@@ -91,6 +92,7 @@ pub fn from_bytes(
 	has_alpha: bool,
 	gray_method: GrayMethod,
 	monospace: bool,
+	threshold: u8,
 ) -> Result<String, ConversionError> {
 	let depth = if has_alpha { 4 } else { 3 };
 	let height = bytes.len() / depth / width;
@@ -100,7 +102,15 @@ pub fn from_bytes(
 	if height % 4 != 0 {
 		return Err(ConversionError::HeightNotMultipleOfFour);
 	}
-	Ok(apply(bytes, width, invert, depth, gray_method, monospace))
+	Ok(apply(
+		bytes,
+		width,
+		invert,
+		depth,
+		gray_method,
+		monospace,
+		threshold,
+	))
 }
 
 pub fn from_path(
@@ -109,6 +119,7 @@ pub fn from_path(
 	new_width: Option<u32>,
 	gray_method: GrayMethod,
 	monospace: bool,
+	threshold: u8,
 ) -> Result<String, ConversionError> {
 	let mut img = image::open(path).unwrap();
 	if let Some(new_width) = new_width.map(|w| w * 2) {
@@ -136,5 +147,6 @@ pub fn from_path(
 		true,
 		gray_method,
 		monospace,
+		threshold,
 	)
 }
