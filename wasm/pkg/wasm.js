@@ -73,14 +73,14 @@ function takeObject(idx) {
  * @param {boolean} monospace
  * @returns {string}
  */
-export function apply(bytes, width, invert, has_alpha, gray_method, monospace) {
+export function parse(bytes, width, invert, has_alpha, gray_method, monospace) {
     let deferred3_0;
     let deferred3_1;
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passArray8ToWasm0(bytes, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.apply(retptr, ptr0, len0, width, invert, has_alpha, gray_method, monospace);
+        wasm.parse(retptr, ptr0, len0, width, invert, has_alpha, gray_method, monospace);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);

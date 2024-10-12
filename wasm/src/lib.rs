@@ -1,8 +1,8 @@
 use braille_ascii_art::{from_bytes, ConversionError, GrayMethod};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen(js_name = apply)]
-pub fn apply(
+#[wasm_bindgen]
+pub fn parse(
     bytes: &[u8],
     width: usize,
     invert: bool,
