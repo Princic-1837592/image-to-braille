@@ -7,5 +7,5 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-braille-ascii-art = { git = "https://github.com/Princic-1837592/image-to-braille", rev = "4dd0ef4fd000b6aaccdc90fd2dc831c20e043823" }
+braille-ascii-art = { git = "https://github.com/Princic-1837592/image-to-braille", rev = "729ba5e8404b8fcad274f21aa5e7e3b059b8f62c" }
 wasm-bindgen = "0.2.80"
