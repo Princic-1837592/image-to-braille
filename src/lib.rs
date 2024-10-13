@@ -1,13 +1,18 @@
 use std::path::PathBuf;
 
-use image::{imageops::overlay, DynamicImage, EncodableLayout};
+use image::{imageops, imageops::overlay, open, DynamicImage, GrayImage, RgbImage, RgbaImage};
 
 const UNICODE_OFFSET: u32 = 0x2800;
+
+type Result<T> = std::result::Result<T, ConversionError>;
 
 #[derive(Debug, Copy, Clone)]
 pub enum ConversionError {
 	WidthNotEven,
 	HeightNotMultipleOfFour,
+	InvalidLowThreshold,
+	InvalidHighThreshold,
+	InvalidBytes,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -17,6 +22,25 @@ pub enum GrayMethod {
 	Luminosity,
 	Max,
 	Min,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Canny {
+	sigma: f32,
+	low: f32,
+	high: f32,
+}
+
+impl Canny {
+	pub fn new(sigma: f32, low: f32, high: f32) -> Result<Self> {
+		if !(0.0..=1.0).contains(&low) || low >= high {
+			return Err(ConversionError::InvalidLowThreshold);
+		}
+		if !(0.0..=1.0).contains(&high) {
+			return Err(ConversionError::InvalidHighThreshold);
+		}
+		Ok(Self { sigma, low, high })
+	}
 }
 
 fn to_gray(pixel: [u8; 3], method: GrayMethod) -> u8 {
@@ -88,13 +112,29 @@ pub fn from_bytes(
 	gray_method: GrayMethod,
 	monospace: bool,
 	threshold: u8,
-) -> Result<String, ConversionError> {
+	canny: Option<Canny>,
+) -> Result<String> {
 	let height = bytes.len() / 3 / width;
 	if width % 2 != 0 {
 		return Err(ConversionError::WidthNotEven);
 	}
 	if height % 4 != 0 {
 		return Err(ConversionError::HeightNotMultipleOfFour);
+	}
+	if let Some(canny) = canny {
+		let img = DynamicImage::ImageRgb8(
+			RgbImage::from_raw(width as u32, height as u32, bytes.to_vec())
+				.ok_or(ConversionError::InvalidBytes)?,
+		);
+		let img = apply_canny(img.to_luma8(), canny);
+		return Ok(apply(
+			img.as_bytes(),
+			img.width() as usize,
+			invert,
+			gray_method,
+			monospace,
+			1,
+		));
 	}
 	Ok(apply(
 		bytes,
@@ -112,34 +152,43 @@ pub fn from_path(
 	new_width: Option<u32>,
 	gray_method: GrayMethod,
 	monospace: bool,
-	threshold: u8,
-) -> Result<String, ConversionError> {
-	let mut img = image::open(path).unwrap();
-	if let Some(new_width) = new_width.map(|w| w * 2) {
-		let new_height =
-			(img.height() as f32 / img.width() as f32 * new_width as f32).round() as u32;
-		img = img.resize(new_width, new_height, image::imageops::FilterType::Gaussian);
-	}
-	if img.width() % 2 != 0 {
-		img = img.crop_imm(0, 0, img.width() - 1, img.height());
-	}
-	if img.height() % 4 != 0 {
-		img = img.crop_imm(0, 0, img.width(), img.height() - img.height() % 4);
-	}
-	let mut white = image::RgbaImage::from_raw(
+	mut threshold: u8,
+	mut canny: Option<Canny>,
+) -> Result<String> {
+	let img = open(path).unwrap();
+	let mut white = RgbaImage::from_raw(
 		img.width(),
 		img.height(),
 		vec![255; (img.width() * img.height() * 4) as usize],
 	)
 	.unwrap();
 	overlay(&mut white, &img, 0, 0);
-	let rgb = DynamicImage::ImageRgba8(white).into_rgb8();
+	let mut img = DynamicImage::ImageRgb8(DynamicImage::ImageRgba8(white).to_rgb8());
+	if canny.is_some() {
+		let canny = canny.take().unwrap();
+		threshold = 1;
+		img = apply_canny(img.to_luma8(), canny)
+	}
+	if let Some(new_width) = new_width.map(|w| w * 2) {
+		let new_height =
+			(img.height() as f32 / img.width() as f32 * new_width as f32).round() as u32;
+		img = img.resize_to_fill(
+			new_width - new_width % 2,
+			new_height - new_height % 4,
+			imageops::FilterType::Gaussian,
+		);
+	}
 	from_bytes(
-		rgb.as_bytes(),
-		rgb.width() as usize,
+		img.as_bytes(),
+		img.width() as usize,
 		invert,
 		gray_method,
 		monospace,
 		threshold,
+		canny,
 	)
+}
+
+fn apply_canny(img: GrayImage, Canny { sigma, low, high }: Canny) -> DynamicImage {
+	edge_detection::canny(img, sigma, high, low).as_image()
 }

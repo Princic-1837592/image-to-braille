@@ -1,6 +1,6 @@
 use std::{fs::File, io::Write, path::PathBuf};
 
-use braille_ascii_art::{from_path, GrayMethod};
+use braille_ascii_art::{from_path, Canny, GrayMethod};
 use clap::{Parser, ValueEnum};
 
 #[derive(Parser, Debug)]
@@ -24,6 +24,15 @@ struct Cli {
 	#[clap(short, long, default_value = "128")]
 	/// Threshold to determine if a pixel is black or white. Must be between 0 and 255
 	threshold: u8,
+	#[clap(short, long)]
+	/// Sigma value for canny edge detection
+	sigma: Option<f32>,
+	#[clap(short, long)]
+	/// Low threshold value for canny edge detection
+	low: Option<f32>,
+	#[clap(short, long)]
+	/// High threshold value for canny edge detection
+	high: Option<f32>,
 }
 
 #[derive(Debug, Copy, Clone, ValueEnum)]
@@ -56,6 +65,10 @@ fn main() {
 		cli.gray.unwrap_or(CliGrayMethod::Luminosity).into(),
 		cli.monospace,
 		cli.threshold,
+		cli.sigma.and_then(|s| {
+			cli.low
+				.and_then(|l| cli.high.map(|h| Canny::new(s, l, h).unwrap()))
+		}),
 	)
 	.unwrap();
 	let mut file = File::create(cli.dest).unwrap();
