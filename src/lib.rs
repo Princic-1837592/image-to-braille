@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use image::{imageops::overlay, EncodableLayout};
+use image::{imageops::overlay, DynamicImage, EncodableLayout};
 
 const UNICODE_OFFSET: u32 = 0x2800;
 
@@ -19,8 +19,8 @@ pub enum GrayMethod {
 	Min,
 }
 
-fn to_gray(pixel: [u8; 4], method: GrayMethod) -> u8 {
-	let [r, g, b, _] = pixel;
+fn to_gray(pixel: [u8; 3], method: GrayMethod) -> u8 {
+	let [r, g, b] = pixel;
 	match method {
 		GrayMethod::Lightness => {
 			let max = r.max(g).max(b);
@@ -40,13 +40,12 @@ fn apply(
 	bytes: &[u8],
 	width: usize,
 	invert: bool,
-	depth: usize,
 	gray_method: GrayMethod,
 	monospace: bool,
 	threshold: u8,
 ) -> String {
-	let height = bytes.len() / width / depth;
-	let mut result = String::with_capacity((bytes.len() / depth / 8) * 3 + height);
+	let height = bytes.len() / width / 3;
+	let mut result = String::with_capacity((bytes.len() / 3 / 8) * 3 + height);
 	let pixel_offsets = [
 		0,
 		width,
@@ -57,18 +56,15 @@ fn apply(
 		3 * width,
 		3 * width + 1,
 	];
-	let mut pixel_buffer = [0; 4];
+	let mut pixel_buffer = [0; 3];
 	for i in (0..height).step_by(4) {
 		for j in (0..width).step_by(2) {
 			let mut buffer: u8 = 0b11111111;
 			for (o, offset) in pixel_offsets.iter().enumerate() {
 				pixel_buffer.clone_from_slice(
-					&bytes[(i * width + j + offset) * depth..(i * width + j + offset) * depth + 4],
+					&bytes[(i * width + j + offset) * 3..(i * width + j + offset) * 3 + 3],
 				);
-				if depth == 4 {
-					pixel_buffer[3] = 0xff;
-				}
-				if pixel_buffer[3] >= threshold && to_gray(pixel_buffer, gray_method) >= threshold {
+				if to_gray(pixel_buffer, gray_method) >= threshold {
 					buffer ^= 1 << o;
 				}
 			}
@@ -89,13 +85,11 @@ pub fn from_bytes(
 	bytes: &[u8],
 	width: usize,
 	invert: bool,
-	has_alpha: bool,
 	gray_method: GrayMethod,
 	monospace: bool,
 	threshold: u8,
 ) -> Result<String, ConversionError> {
-	let depth = if has_alpha { 4 } else { 3 };
-	let height = bytes.len() / depth / width;
+	let height = bytes.len() / 3 / width;
 	if width % 2 != 0 {
 		return Err(ConversionError::WidthNotEven);
 	}
@@ -106,7 +100,6 @@ pub fn from_bytes(
 		bytes,
 		width,
 		invert,
-		depth,
 		gray_method,
 		monospace,
 		threshold,
@@ -140,11 +133,11 @@ pub fn from_path(
 	)
 	.unwrap();
 	overlay(&mut white, &img, 0, 0);
+	let rgb = DynamicImage::ImageRgba8(white).into_rgb8();
 	from_bytes(
-		white.as_bytes(),
-		white.width() as usize,
+		rgb.as_bytes(),
+		rgb.width() as usize,
 		invert,
-		true,
 		gray_method,
 		monospace,
 		threshold,
