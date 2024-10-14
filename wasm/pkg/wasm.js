@@ -42,6 +42,10 @@ function passArray8ToWasm0(arg, malloc) {
     return ptr;
 }
 
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
 let cachedDataViewMemory0 = null;
 
 function getDataViewMemory0() {
@@ -71,9 +75,9 @@ function takeObject(idx) {
  * @param {number} gray_method
  * @param {boolean} monospace
  * @param {number} threshold
- * @param {number} sigma
- * @param {number} low
- * @param {number} high
+ * @param {number | undefined} [sigma]
+ * @param {number | undefined} [low]
+ * @param {number | undefined} [high]
  * @returns {string}
  */
 export function parse(bytes, width, invert, gray_method, monospace, threshold, sigma, low, high) {
@@ -83,7 +87,7 @@ export function parse(bytes, width, invert, gray_method, monospace, threshold, s
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passArray8ToWasm0(bytes, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.parse(retptr, ptr0, len0, width, invert, gray_method, monospace, threshold, sigma, low, high);
+        wasm.parse(retptr, ptr0, len0, width, invert, gray_method, monospace, threshold, !isLikeNone(sigma), isLikeNone(sigma) ? 0 : sigma, !isLikeNone(low), isLikeNone(low) ? 0 : low, !isLikeNone(high), isLikeNone(high) ? 0 : high);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);

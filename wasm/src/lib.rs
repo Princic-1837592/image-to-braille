@@ -10,9 +10,9 @@ pub fn parse(
 	gray_method: usize,
 	monospace: bool,
 	threshold: u8,
-	sigma: f32,
-	low: f32,
-	high: f32,
+	sigma: Option<f32>,
+	low: Option<f32>,
+	high: Option<f32>,
 ) -> Result<String, String> {
 	from_bytes(
 		bytes,
@@ -27,7 +27,7 @@ pub fn parse(
 		},
 		monospace,
 		threshold,
-		Some(Canny::new(sigma, low, high).map_err(|_| "InvalidCannySettings")?),
+		sigma.and_then(|s| low.and_then(|l| high.and_then(|h| Canny::new(s, l, h).ok()))),
 	)
 	.map_err(|error| {
 		match error {
