@@ -24,6 +24,11 @@ body * {
 	height: 100%;
 }
 
+#braille-art {
+	flex-grow: 1;
+	overflow: auto;
+}
+
 #settings {
 	width: 15%;
 	min-width: 7cm;
@@ -68,7 +73,7 @@ body * {
 	}
 }
 
-#threshold-container {
+.threshold-container {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -76,7 +81,10 @@ body * {
 	width: max-content;
 }
 
-#braille-art {
-	flex-grow: 1;
-	overflow: auto;
+#canny-container > *:not(:last-child) {
+	margin-bottom: 20px;
+}
+
+#canny-options > *:not(:last-child) {
+	margin-bottom: 5px;
 }

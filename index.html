@@ -25,8 +25,8 @@
 				<option value="4">Min</option>
 			</select>
 		</label>
-		<div id="threshold-container">
-			<span>Threshold: <span id="threshold-value">128</span></span>
+		<div class="threshold-container">
+			<span>Threshold: <span class="threshold-value">0</span></span>
 			<label>
 				<input type="range" id="threshold" min="0" max="255" value="128">
 			</label>
@@ -42,6 +42,34 @@
 				<input type="number" id="width-pixels" value="160" min="2" step="2">
 			</label>
 			Width (pixels)
+		</div>
+		<div id="canny-container">
+			<div>
+				<label class="hover">
+					<input type="checkbox" id="canny-active">
+					Edge detection
+				</label>
+			</div>
+			<div id="canny-options">
+				<div class="threshold-container">
+					<span>Sigma: <span class="threshold-value">0</span></span>
+					<label>
+						<input type="range" id="canny-sigma" min="0" max="30" value="15" disabled>
+					</label>
+				</div>
+				<div class="threshold-container">
+					<span>Low: <span class="threshold-value">0</span>%</span>
+					<label>
+						<input type="range" id="canny-low" min="1" max="99" value="40" disabled>
+					</label>
+				</div>
+				<div class="threshold-container">
+					<span>High: <span class="threshold-value">0</span>%</span>
+					<label>
+						<input type="range" id="canny-high" min="2" max="99" value="60" disabled>
+					</label>
+				</div>
+			</div>
 		</div>
 		<label for="file" id="upload">
 			<input id="file" type="file" accept="image/*">

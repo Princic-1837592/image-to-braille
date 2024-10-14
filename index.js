@@ -8,6 +8,7 @@ let CHAR_COUNT;
 let BRAILLE;
 let LAST_IMAGE, LAST_CANVAS;
 let FILE;
+let CANNY_OPTIONS, CANNY_ACTIVE, CANNY_SIGMA, CANNY_LOW, CANNY_HIGH;
 
 window.onload = async function () {
 	await init();
@@ -23,6 +24,11 @@ window.onload = async function () {
 	CHAR_COUNT = document.getElementById("char-count");
 	BRAILLE = document.getElementById("braille-art");
 	FILE = document.getElementById("file");
+	CANNY_OPTIONS = document.getElementById("canny-options");
+	CANNY_ACTIVE = document.getElementById("canny-active");
+	CANNY_SIGMA = document.getElementById("canny-sigma");
+	CANNY_LOW = document.getElementById("canny-low");
+	CANNY_HIGH = document.getElementById("canny-high");
 
 	CHARS.addEventListener("change", updatePixels);
 	PIXELS.addEventListener("change", updateChars);
@@ -31,13 +37,25 @@ window.onload = async function () {
 			await createCanvas(LAST_IMAGE);
 		});
 	}
-	THRESHOLD.oninput = async () => {
-		THRESHOLD_VALUE.innerText = THRESHOLD.value;
-		await createCanvas(LAST_IMAGE);
-	};
 	COPY.onclick = async () => {
 		await navigator.clipboard.writeText(BRAILLE.innerText.trim());
 	};
+	for (const container of document.getElementsByClassName("threshold-container")) {
+		const value = container.getElementsByClassName("threshold-value")[0];
+		const input = container.getElementsByTagName("input")[0];
+		input.oninput = async () => {
+			value.innerText = input.value;
+			await createCanvas(LAST_IMAGE);
+		};
+		value.innerText = input.value;
+	}
+	CANNY_ACTIVE.onchange = async () => {
+		await createCanvas(LAST_IMAGE);
+		for (const input of [CANNY_SIGMA, CANNY_LOW, CANNY_HIGH]) {
+			input.disabled = !CANNY_ACTIVE.checked;
+		}
+		THRESHOLD.disabled = CANNY_ACTIVE.checked;
+	}
 
 	document.body.ondragover = (e) => e.preventDefault();
 	document.body.ondrop = async (e) => {
@@ -57,17 +75,25 @@ window.onload = async function () {
 
 function convert() {
 	const canvas = LAST_CANVAS;
-	const ctx = canvas.getContext("2d");
-	const bytes = new Uint8Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+	const ctx = canvas.getContext("2d", {alpha: false});
+	const bytes = new Uint8Array(
+		ctx
+			.getImageData(0, 0, canvas.width, canvas.height)
+			.data
+			.filter((_, index) => (index + 1) % 4 !== 0)
+			.buffer
+	);
 	try {
 		const result = parse(
 			bytes,
 			canvas.width,
 			INVERT.checked,
-			true,
 			GRAY.value,
 			MONOSPACE.checked,
 			THRESHOLD.value,
+			CANNY_ACTIVE.checked ? CANNY_SIGMA.value / 10 : null,
+			CANNY_ACTIVE.checked ? CANNY_LOW.value / 100 : null,
+			CANNY_ACTIVE.checked ? CANNY_HIGH.value / 100 : null,
 		).trim();
 		document.getElementById("braille-art").innerText = result;
 		CHAR_COUNT.innerText = result.length;
@@ -99,7 +125,7 @@ async function createCanvas(src) {
 		canvas.width = width - (width % 2);
 		canvas.height = height - (height % 4);
 		const ctx = canvas.getContext("2d");
-		ctx.fillStyle = "#ffffffff";
+		ctx.fillStyle = "#ffffff";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 		ctx.imageSmoothingEnabled = false;
 		ctx.mozImageSmoothingEnabled = false;
